@@ -110,7 +110,7 @@ namespace Cliptok.Modules
                 return false;
 
             var level = Warnings.GetPermLevel(ctx.Member);
-            if (level >= this.TargetLvl)
+            if (level >= TargetLvl)
                 return true;
             else
                 return false;
@@ -361,9 +361,9 @@ namespace Cliptok.Modules
             var sb = new StringBuilder();
             if (span.Days > 365)
             {
-                int years = (int)(span.Days / 365);
+                int years = span.Days / 365;
                 sb.AppendFormat("{0} year{1}", years, years > 1 ? "s" : String.Empty);
-                int remDays = (int)(span.Days - (365 * years));
+                int remDays = span.Days - (365 * years);
                 int months = remDays / 30;
                 if (months > 0)
                     sb.AppendFormat(", {0} month{1}", months, months > 1 ? "s" : String.Empty);
@@ -718,8 +718,7 @@ namespace Cliptok.Modules
             Dictionary<string, int> counts = new();
             foreach (var key in keys)
             {
-                ulong number;
-                if (ulong.TryParse(key.ToString(), out number))
+                if (ulong.TryParse(key.ToString(), out ulong number))
                 {
                     counts[key.ToString()] = Program.db.HashGetAll(key).Count();
                 }

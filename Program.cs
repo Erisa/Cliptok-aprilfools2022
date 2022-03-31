@@ -1,4 +1,4 @@
-using Cliptok.Helpers;
+﻿using Cliptok.Helpers;
 using Cliptok.Modules;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -34,7 +34,7 @@ namespace Cliptok
 
         public OutputCapture()
         {
-            this.stdOutWriter = Console.Out;
+            stdOutWriter = Console.Out;
             Console.SetOut(this);
             Captured = new StringWriter();
         }
@@ -88,6 +88,8 @@ namespace Cliptok
 
         static public readonly HttpClient httpClient = new();
 
+        static public string[] waterList;
+
         public static void UpdateLists()
         {
             foreach (var list in cfgjson.WordListList)
@@ -95,6 +97,8 @@ namespace Cliptok
                 var listOutput = File.ReadAllLines($"Lists/{list.Name}");
                 cfgjson.WordListList[cfgjson.WordListList.FindIndex(a => a.Name == list.Name)].Words = listOutput;
             }
+
+            waterList = File.ReadAllLines("Lists/water.txt");
         }
 
         public static async Task<bool> CheckAndDehoistMemberAsync(DiscordMember targetMember)
@@ -784,6 +788,35 @@ namespace Cliptok
                 return Task.CompletedTask;
             }
 
+            discord.MessageReactionAdded += async (s, e) =>
+            {
+                if (DateTime.Now.Month == 3 && DateTime.Now.Day == 1 && DateTime.Now.Year == 2022)
+                {
+
+                    if (!e.User.IsBot && e.Emoji.Id == 959169120421703760 && DateTime.Now.Month == 3 && DateTime.Now.Day == 31 && DateTime.Now.Year == 2022)
+                    {
+
+                        var list = await db.ListRangeAsync("2022-aprilfools-hydrate-messages", 0, -1);
+                        var messageCount = (int)db.StringGet("2022-aprilfools-message-count");
+
+                        if (messageCount == 0)
+                            return;
+                        else if (messageCount == 1)
+                        {
+                            await db.SetAddAsync($"2022-aprilfools-hydration-{e.User.Id}", e.Message.Id);
+                        }
+                        else
+                        {
+                            if (list[messageCount - 1] == e.Message.Id || list[messageCount - 2] == e.Message.Id)
+                            {
+                                await db.SetAddAsync($"2022-aprilfools-hydration-{e.User.Id}", e.Message.Id);
+                            }
+                        }
+
+                    }
+                }
+            };
+
             discord.ComponentInteractionCreated += async (s, e) =>
             {
                 // Initial response to avoid the 3 second timeout, will edit later.
@@ -853,6 +886,33 @@ namespace Cliptok
 
             // Only wait 3 seconds before the first set of tasks.
             await Task.Delay(3000);
+
+            var generalChat = await discord.GetChannelAsync(885928971068387352);
+
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (DateTime.Now.Month == 4 && DateTime.Now.Day == 1 && DateTime.Now.Year == 2022)
+                    {
+                        int messageCount = 0;
+                        if (db.KeyExists("2022-aprilfools-message-count"))
+                        {
+                            messageCount = (int)db.StringGet("2022-aprilfools-message-count");
+                        }
+
+                        var msg = await generalChat.SendMessageAsync(waterList[messageCount]);
+
+                        db.StringSet("2022-aprilfools-message-count", messageCount + 1);
+
+                        await db.ListRightPushAsync("2022-aprilfools-hydrate-messages", msg.Id);
+                        var emoji = await homeGuild.GetEmojiAsync(959169120421703760);
+                        await msg.CreateReactionAsync(emoji);
+                    }
+                    await Task.Delay(rand.Next(1800000, 2700000)); // 30-45 minutes
+                }
+            });
+
             while (true)
             {
                 try
@@ -874,7 +934,6 @@ namespace Cliptok
                 }
                 await Task.Delay(10000);
             }
-
         }
     }
 }
