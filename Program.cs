@@ -887,7 +887,7 @@ namespace Cliptok
             // Only wait 3 seconds before the first set of tasks.
             await Task.Delay(3000);
 
-            var generalChat = await discord.GetChannelAsync(885928971068387352);
+            var generalChat = await discord.GetChannelAsync(150662382874525696);
 
             Task.Run(async () =>
             {
