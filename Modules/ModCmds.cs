@@ -1182,6 +1182,65 @@ namespace Cliptok.Modules
             }
         }
 
+        [Command("waterscores")]
+        [HomeServer,RequireHomeserverPerm(ServerPermLevel.TrialModerator)]
+        public async Task WaterScores(CommandContext ctx)
+        {
+            try
+            {
+                await ctx.TriggerTypingAsync();
+            }
+            catch
+            {
+                // typing failing is unimportant, move on
+            }
+
+            var server = Program.redis.GetServer(Program.redis.GetEndPoints()[0]);
+            var keys = server.Keys();
+
+            Dictionary<string, int> counts = new();
+            foreach (var key in keys)
+            {
+                if (!key.ToString().StartsWith("2022-aprilfools-"))
+                    continue;
+
+                var userid = key.ToString().Split('-').Last();
+
+                if (ulong.TryParse(userid, out ulong number))
+                {
+                    counts[userid] = (int)Program.db.SetLength(key.ToString());
+                }
+            }
+
+            List<KeyValuePair<string, int>> myList = counts.ToList();
+            myList.Sort(
+                delegate (KeyValuePair<string, int> pair1,
+                KeyValuePair<string, int> pair2)
+                {
+                    return pair2.Value.CompareTo(pair1.Value);
+                }
+            );
+
+            //myList = myList.Reverse();
+
+            string str = "";
+
+            var progress = 1;
+            foreach (KeyValuePair<string, int> pair in myList)
+            {
+                if (progress == 20)
+                {
+                    break;
+                }
+                str += $"**{progress}**: <@{pair.Key}> ({pair.Value})\n";
+                progress += 1;
+            }
+
+            var embed = new DiscordEmbedBuilder().WithDescription(str).WithTitle("Top water scores");
+
+            await ctx.RespondAsync(embed: embed);
+        }
+
         [Command("listadd")]
         [Description("Add a piece of text to a public list.")]
         [HomeServer, RequireHomeserverPerm(ServerPermLevel.Moderator)]
