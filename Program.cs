@@ -89,6 +89,10 @@ namespace Cliptok
         static public readonly HttpClient httpClient = new();
 
         static public string[] waterList;
+        static public List<string> allWordList;
+
+        static public int maxWordCount;
+        static public string winningWord;
 
         public static void UpdateLists()
         {
@@ -141,6 +145,17 @@ namespace Cliptok
 
         static async Task MainAsync(string[] _)
         {
+            // load all words into memory
+            var allWords = File.ReadAllLines(@"Lists/words.txt");
+            allWordList = new List<string>(allWords);
+            if (allWordList == null)
+            {
+                allWordList.Add("torchsucks");
+            }
+
+            winningWord = "moist"; // word that does something different idk a checkmark reaction? not even sure if it'll be used
+            maxWordCount = 25; // maximum number of words per message to prevent people from breaking cliptok
+
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var logFormat = "[{Timestamp:yyyy-MM-dd HH:mm:ss zzz}] [{Level}] {Message}{NewLine}{Exception}\n";
             Log.Logger = new LoggerConfiguration()
@@ -790,8 +805,8 @@ namespace Cliptok
 
             discord.MessageReactionAdded += async (s, e) =>
             {
- //               if (DateTime.Now.Month == 4 && DateTime.Now.Day == 1 && DateTime.Now.Year == 2022)
- //               {
+                if (DateTime.Now.Month == 4 && DateTime.Now.Day == 1 && DateTime.Now.Year == 2022)
+                {
 
                     if (!e.User.IsBot && e.Emoji.Id == 959169120421703760)
                     {
@@ -812,7 +827,7 @@ namespace Cliptok
                         }
 
                     }
-//                }
+                }
             };
 
             discord.ComponentInteractionCreated += async (s, e) =>

@@ -3,6 +3,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -597,6 +598,21 @@ namespace Cliptok.Modules
                     }
                 }
 
+                if (message.Channel.Id == 959123476013252658 && !message.Author.IsBot)
+                {
+                    var result = checkIfValid(message.Content);
+
+                    if (result.shouldDeleteMessage)
+                    {
+                        await message.DeleteAsync();
+                    }
+                    else if (result.containsWinningWord)
+                    {
+                        await message.CreateReactionAsync(DiscordEmoji.FromUnicode("💧"));
+                        await Program.db.StringSetAsync("2022-aprilfools-mysterychannel-winner", message.Author.Id);
+                    }
+                }
+
                 if (!isAnEdit && message.Channel.Id == Program.cfgjson.FeedbackHubChannelId)
                 {
                     var captures = bold_rx.Match(message.Content).Groups[1].Captures;
@@ -661,6 +677,73 @@ namespace Cliptok.Modules
                 }
             }
 
+        }
+
+        // april fools 2022
+        public static (bool shouldDeleteMessage, bool containsWinningWord) checkIfValid(string message)
+        {
+            bool shouldDeleteMessage = true; // word has been used already
+            bool containsWinningWord = false; // word is the winning word, this person wins or something idk
+
+            List<string> currentlyUsedWords;
+
+            if (Program.db.KeyExists("2022-aprilfools-mystery-channel-list"))
+            {
+                var array = Program.db.ListRange("2022-aprilfools-mystery-channel-list", 0, -1).ToStringArray();
+                currentlyUsedWords = new List<string>(array);
+            } else
+            {
+                currentlyUsedWords = new();
+            }
+
+            List<string> messageWordList = new List<string>(new HashSet<string>(message
+                            .Replace("\'", " ")
+                            .Replace("\n", " ")
+                            .Replace("\r", " ")
+                            .Replace("-", " ")
+                            .Replace("_", " ")
+                            .Replace(".", " ")
+                            .Replace(":", " ")
+                            .Replace("/", " ")
+                            .Replace(",", " ")
+                            .Split(' ')
+                            ));
+
+            if (messageWordList.Count > Program.maxWordCount)
+            {
+                return (shouldDeleteMessage, containsWinningWord);
+            }
+
+            foreach (string word in messageWordList)
+            {
+                // the list of used words will be smaller than the list of all words, check that first to save time
+                if (!currentlyUsedWords.Contains(word))
+                {
+                    // check that word is real, don't wanna perform this more than once per word duh
+                    if (Program.allWordList.Contains(word))
+                    {
+                        Program.db.ListRightPush("2022-aprilfools-mystery-channel-list", word); // Program.db.SetAdd("2022-aprilfools-mysterychannel-words", word)
+
+                        shouldDeleteMessage = false;
+                        if (word == Program.winningWord)
+                        {
+                            containsWinningWord = true;
+                        }
+                    }
+                    else
+                    {
+                        shouldDeleteMessage = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    shouldDeleteMessage = true;
+                    break;
+                }
+            }
+
+            return (shouldDeleteMessage, containsWinningWord);
         }
 
         public static int CountNewlines(string input)
