@@ -35,7 +35,7 @@ namespace Cliptok.Modules
             input = input.Replace("\0", "");
             if (naughtyWordList.WholeWord)
             {
-                input = input.Replace("\'", " ")
+                input = input.Replace("\"", " ")
                     .Replace("-", " ")
                     .Replace("_", " ")
                     .Replace(".", " ")
@@ -600,7 +600,7 @@ namespace Cliptok.Modules
 
                 if (message.Channel.Id == 959123476013252658 && !message.Author.IsBot)
                 {
-                    var result = checkIfValid(message.Content);
+                    var result = checkIfValid(message.Content.ToLower());
 
                     if (result.shouldDeleteMessage)
                     {
