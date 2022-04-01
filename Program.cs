@@ -1,4 +1,4 @@
-﻿using Cliptok.Helpers;
+using Cliptok.Helpers;
 using Cliptok.Modules;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -790,18 +790,16 @@ namespace Cliptok
 
             discord.MessageReactionAdded += async (s, e) =>
             {
-                if (DateTime.Now.Month == 3 && DateTime.Now.Day == 1 && DateTime.Now.Year == 2022)
-                {
+ //               if (DateTime.Now.Month == 4 && DateTime.Now.Day == 1 && DateTime.Now.Year == 2022)
+ //               {
 
-                    if (!e.User.IsBot && e.Emoji.Id == 959169120421703760 && DateTime.Now.Month == 3 && DateTime.Now.Day == 31 && DateTime.Now.Year == 2022)
+                    if (!e.User.IsBot && e.Emoji.Id == 959169120421703760)
                     {
 
                         var list = await db.ListRangeAsync("2022-aprilfools-hydrate-messages", 0, -1);
                         var messageCount = (int)db.StringGet("2022-aprilfools-message-count");
 
-                        if (messageCount == 0)
-                            return;
-                        else if (messageCount == 1)
+                        if (messageCount == 1 && list[0] == e.Message.Id)
                         {
                             await db.SetAddAsync($"2022-aprilfools-hydration-{e.User.Id}", e.Message.Id);
                         }
@@ -814,7 +812,7 @@ namespace Cliptok
                         }
 
                     }
-                }
+//                }
             };
 
             discord.ComponentInteractionCreated += async (s, e) =>
