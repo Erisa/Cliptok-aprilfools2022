@@ -1236,7 +1236,9 @@ namespace Cliptok.Modules
                 progress += 1;
             }
 
-            var embed = new DiscordEmbedBuilder().WithDescription(str).WithTitle("Top water scores");
+            var count = Program.db.StringGet("2022-aprilfools-message-count");
+
+            var embed = new DiscordEmbedBuilder().WithDescription(str).WithTitle("Top water scores").WithFooter($"There have been {count} water messages so far.");
 
             await ctx.RespondAsync(embed: embed);
         }
