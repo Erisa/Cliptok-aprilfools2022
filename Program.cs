@@ -153,7 +153,7 @@ namespace Cliptok
                 allWordList.Add("torchsucks");
             }
 
-            winningWord = "moist"; // word that does something different idk a checkmark reaction? not even sure if it'll be used
+            winningWord = "moisture"; // word that does something different idk a checkmark reaction? not even sure if it'll be used
             maxWordCount = 25; // maximum number of words per message to prevent people from breaking cliptok
 
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
